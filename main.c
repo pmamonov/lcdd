@@ -16,6 +16,7 @@ uint32_t tim;
 char msg[MSG_LEN+1] = "quick brown fox jumps over a lazy dog";
 
 uint32_t delay;
+uint8_t update;
 
 ISR(TIMER1_OVF_vect)
 {
@@ -30,10 +31,12 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 	switch (rq->bRequest) {
 	case 0:
 		delay = (uint32_t)rq->wValue.word;
+		update = 1;
 		break;
 	case 1:
 		if (rq->wIndex.word < MSG_LEN)
 			msg[rq->wIndex.word] = rq->wValue.word;
+		update = 1;
 		break;
 	default:
 		break;
@@ -65,7 +68,7 @@ void main(void)
 	sei();
 
 	while (1) {
-		if (tim == 0) {
+		if (delay > 0 && tim == 0) {
 			tim = delay;
 
 			msg_len = strlen(msg);
@@ -89,6 +92,10 @@ void main(void)
 			lcd_buff[LCD_LEN] = 0;
 			lcd_Print(lcd_buff);
 			shift++;
+		}
+		if (delay == 0 && update) {
+			update = 0;
+			lcd_Print(msg);
 		}
 		usbPoll();
 	}
