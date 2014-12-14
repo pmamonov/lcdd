@@ -32,6 +32,25 @@ class lcdd:
 		for i in xrange(len(msg)):
 			self.dev.controlMsg(rq, 1, 0, ord(msg[i]), i);
 
+def fill(c, i, l):
+	return i * c + (l - i) * ' '
+
+def heartbeet(d = 0.1, cup = '>', cdown = '<'):
+	lcd = lcdd()
+	while 1:
+		for i in xrange(11):
+			try:
+				lcd.set_msg(fill(cup, i, 10))
+			except:
+				pass
+			sleep(d)
+		for i in xrange(9,0,-1):
+			try:
+				lcd.set_msg(fill(cdown, i, 10))
+			except:
+				pass
+			sleep(d)
+
 if __name__ == "__main__":
 	lcd = lcdd()
 	msg = sys.stdin.read().strip()
