@@ -28,15 +28,25 @@ class lcdd:
 
 	def set_msg(self, msg):
 		rq = usb.TYPE_VENDOR | usb.RECIP_DEVICE | usb.ENDPOINT_IN
+		# put zero after last symbol
 		self.dev.controlMsg(rq, 1, 0, 0, len(msg));
 		for i in xrange(len(msg)):
 			self.dev.controlMsg(rq, 1, 0, ord(msg[i]), i);
+
+	def glcd_clr(self):
+		rq = usb.TYPE_VENDOR | usb.RECIP_DEVICE | usb.ENDPOINT_IN
+		self.dev.controlMsg(rq, 3, 0);
+
+	def glcd_pixel(self, x, y):
+		rq = usb.TYPE_VENDOR | usb.RECIP_DEVICE | usb.ENDPOINT_IN
+		self.dev.controlMsg(rq, 2, 0, x | (y << 8));
 
 def fill(c, i, l):
 	return i * c + (l - i) * ' '
 
 def heartbeet(d = 0.1, cup = '>', cdown = '<'):
 	lcd = lcdd()
+	lcd.set_del(0)
 	while 1:
 		for i in xrange(11):
 			try:

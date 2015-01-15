@@ -7,6 +7,8 @@
 #include <string.h>
 #include "usbdrv.h"
 #include "lcd.h"
+#include "KS0108.h"
+#include "graphic.h"
 
 #define F_TIM1 1000ull
 #define LCD_LEN 10
@@ -29,15 +31,31 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
 	usbRequest_t *rq = (void *)data;
 	switch (rq->bRequest) {
+	/* set scrolling delay */
 	case 0:
 		delay = (uint32_t)rq->wValue.word;
 		update = 1;
 		break;
+
+	/* set text */
 	case 1:
 		if (rq->wIndex.word < MSG_LEN)
 			msg[rq->wIndex.word] = rq->wValue.word;
 		update = 1;
 		break;
+
+	/* set pixel */
+	case 2:
+		GLCD_SetPixel(rq->wValue.bytes[0],
+					  rq->wValue.bytes[1],
+					  1);
+		break;
+
+	/* clear screen */
+	case 3:
+		GLCD_ClearScreen();
+		break;
+
 	default:
 		break;
 	}
@@ -60,12 +78,18 @@ void main(void)
 	lcd_Init();
 	lcd_Print("0123456789");
 
+	GLCD_Initialize();
+	GLCD_ClearScreen();
+	GLCD_GoTo(10,10);
+	GLCD_Circle(64, 32, 10);
+
 	usbInit();
 	usbDeviceDisconnect();
 	_delay_ms(250);
 	usbDeviceConnect();
 
 	sei();
+
 
 	while (1) {
 		if (delay > 0 && tim == 0) {

@@ -6,7 +6,10 @@ CFLAGS = -Wall -O3 -mmcu=$(DEVICE) -DF_CPU=$(F_CPU) \
  -DLCD_PORT_NAME=C -DLCD_NCHARS=8\
  -Iusbdrv
 
-OBJ = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o lcd.o main.o
+OBJ = main.o
+OBJ += usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o
+OBJ += lcd.o
+OBJ += graphic.o KS0108.o KS0108-AVR.o 
 
 main.bin: main.elf
 	rm -f main.hex
