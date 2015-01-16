@@ -41,6 +41,18 @@ class lcdd:
 		rq = usb.TYPE_VENDOR | usb.RECIP_DEVICE | usb.ENDPOINT_IN
 		self.dev.controlMsg(rq, 2, 0, x | (y << 8));
 
+	def glcd_img(self, im, _x = 0, _y = 0, thresh = 0.5):
+		for y in xrange(min(im.shape[0], 64)):
+			for x in xrange(min(im.shape[1], 128)):
+				if im[y, x, :3].sum() * 1. / (3 * 0xff) < thresh:
+					ok = 0
+					while not ok:
+						try:
+							self.glcd_pixel(_x + x,_y + y)
+							ok = 1
+						except:
+							pass
+
 def fill(c, i, l):
 	return i * c + (l - i) * ' '
 
