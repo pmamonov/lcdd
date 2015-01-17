@@ -52,6 +52,9 @@ class lcdd:
 							ok = 1
 						except:
 							pass
+	def glcd_bmp(self, bmp):
+		rq = usb.TYPE_VENDOR | usb.RECIP_DEVICE | usb.ENDPOINT_OUT
+		self.dev.controlMsg(rq, 4, bmp[:128 * 64 / 8])
 
 def fill(c, i, l):
 	return i * c + (l - i) * ' '

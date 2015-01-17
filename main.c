@@ -21,6 +21,8 @@ volatile uint32_t delay;
 volatile uint8_t update;
 
 unsigned char bmp[128 * 64 / 8];
+volatile int bmp_pos, bmp_len;
+volatile char glcd_update;
 
 inline void set_pixel_buf(char *buf, unsigned char x, unsigned char y)
 {	if (x >= 128 || y >= 64)
@@ -63,10 +65,33 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 	case 3:
 		GLCD_ClearScreen();
 		break;
+	
+	/* receive bitmap */
+	case 4:
+		bmp_pos = 0;
+		bmp_len = rq->wLength.word;
+		return USB_NO_MSG;
 
 	default:
 		break;
 	}
+	return 0;
+}
+
+unsigned char usbFunctionWrite(unsigned char *data, unsigned char len)
+{
+	int i;
+	for (i = 0; i < len; i++) {
+		if (bmp_pos >= 128 * 64 / 8)
+			break;
+		bmp[bmp_pos++] = data[i];
+	}
+
+	if (bmp_pos == 128 * 64 / 8 || bmp_pos == bmp_len) {
+		glcd_update = 1;
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -101,6 +126,7 @@ void main(void)
 						set_pixel_buf(bmp, x, y);
 	}}}}}
 	GLCD_Bitmap(bmp, 0, 0, 128, 64);
+	glcd_update = 0;
 
 	usbInit();
 	usbDeviceDisconnect();
@@ -139,6 +165,11 @@ void main(void)
 		if (delay == 0 && update) {
 			update = 0;
 			lcd_Print(msg);
+		}
+
+		if (glcd_update) {
+			GLCD_Bitmap(bmp, 0, 0, 128, 64);
+			glcd_update = 0;
 		}
 		usbPoll();
 	}
