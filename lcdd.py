@@ -90,6 +90,18 @@ def checker(lcd):
 							except:
 								pass
 
+def bmp_ks0108(im):
+	bmp = ""
+	for byte in xrange(128 * 64 / 8):
+		b = 0
+		for bit in xrange(8):
+			x = byte % 128
+			y = byte / 128 * 8 + bit
+			if im.getpixel((x,y)):
+				b |= 1 << bit
+		bmp += chr(b)
+	return bmp
+
 if __name__ == "__main__":
 	lcd = lcdd()
 	msg = sys.stdin.read().strip()
