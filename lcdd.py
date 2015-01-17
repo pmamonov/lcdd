@@ -73,6 +73,20 @@ def heartbeet(d = 0.1, cup = '>', cdown = '<'):
 				pass
 			sleep(d)
 
+def checker(lcd):
+	for i in xrange(64/8):
+		for j in xrange(128/8):
+			if (i%2 == 0 and j%2 == 0 or i%2==1 and j%2 == 1):
+				for k in xrange(8):
+					for l in xrange(8):
+						ok=0
+						while not ok:
+							try:
+								lcd.glcd_pixel(8*j+k,8*i+l)
+								ok=1
+							except:
+								pass
+
 if __name__ == "__main__":
 	lcd = lcdd()
 	msg = sys.stdin.read().strip()
