@@ -14,7 +14,7 @@
 #define LCD_LEN 10
 #define MSG_LEN 100
 
-uint32_t tim;
+uint32_t tim, tim1;
 char msg[MSG_LEN+1] = "quick brown fox jumps over a lazy dog";
 
 uint32_t delay;
@@ -28,11 +28,21 @@ inline void set_pixel_buf(char *buf, unsigned char x, unsigned char y)
 	buf[x + 128 * (y / 8)] |= 1 << (y % 8);
 }
 
+struct star {
+	char x;
+	char y;
+};
+
+#define NUM_STARS 50
+struct star stars[NUM_STARS];
+
 ISR(TIMER1_OVF_vect)
 {
 	TCNT1 = 0x10000ull - F_CPU / F_TIM1;
 	if (tim)
 		tim--;
+	if (tim1)
+		tim1--;
 }
 
 usbMsgLen_t usbFunctionSetup(uchar data[8])
@@ -102,6 +112,9 @@ void main(void)
 	}}}}}
 	GLCD_Bitmap(bmp, 0, 0, 128, 64);
 
+	memset(stars, 0, sizeof(stars));
+	srand(42);
+
 	usbInit();
 	usbDeviceDisconnect();
 	_delay_ms(250);
@@ -140,6 +153,36 @@ void main(void)
 			update = 0;
 			lcd_Print(msg);
 		}
+
+		if (!tim1) {
+			tim1 = 100;
+			memset(bmp, 0, 128 * 64 / 8);
+			for (i = 0; i < NUM_STARS; i++) {
+				if (!(stars[i].x == 0 && stars[i].y == 0)) {
+					x = abs(stars[i].x) > abs(stars[i].y) ?
+						abs(stars[i].y) : abs(stars[i].x);
+					if (x == 0)
+						x = abs(stars[i].x) < abs(stars[i].y) ?
+							abs(stars[i].y) : abs(stars[i].x);
+					stars[i].x += stars[i].x / x;
+					stars[i].y += stars[i].y / x;
+				}
+				if (stars[i].x >= 64 ||
+					stars[i].x < -64 ||
+					stars[i].y >= 32 ||
+					stars[i].y < -32 ||
+					stars[i].x == 0 && stars[i].y == 0) {
+						stars[i].x = rand() % 20 - 10;
+						stars[i].y = rand() % 20 - 10;
+					}
+				set_pixel_buf(bmp, stars[i].x + 128 / 2, stars[i].y + 64 / 2);
+				set_pixel_buf(bmp, stars[i].x + 1 + 128 / 2, stars[i].y + 64 / 2);
+				set_pixel_buf(bmp, stars[i].x + 128 / 2, stars[i].y + 1 + 64 / 2);
+				set_pixel_buf(bmp, stars[i].x + 1 + 128 / 2, stars[i].y + 1 + 64 / 2);
+			}
+			GLCD_Bitmap(bmp, 0, 0, 128, 64);
+		}
+
 		usbPoll();
 	}
 }
