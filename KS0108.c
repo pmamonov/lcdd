@@ -92,7 +92,7 @@ for(j = 0; j < dy / 8; j++)
   {
   GLCD_GoTo(x,y + j);
   for(i = 0; i < dx; i++) 
-    GLCD_WriteData(GLCD_ReadByteFromROMMemory(bmp++));
+    GLCD_WriteData(*(bmp++));
   }
 }
 //-------------------------------------------------------------------------------------------------
