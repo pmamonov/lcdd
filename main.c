@@ -20,6 +20,14 @@ char msg[MSG_LEN+1] = "quick brown fox jumps over a lazy dog";
 uint32_t delay;
 uint8_t update;
 
+unsigned char bmp[128 * 64 / 8];
+
+inline void set_pixel_buf(char *buf, unsigned char x, unsigned char y)
+{	if (x >= 128 || y >= 64)
+		return;
+	buf[x + 128 * (y / 8)] |= 1 << (y % 8);
+}
+
 ISR(TIMER1_OVF_vect)
 {
 	TCNT1 = 0x10000ull - F_CPU / F_TIM1;
