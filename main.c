@@ -74,6 +74,7 @@ void main(void)
 {
 	int msg_len, shift, len, msg_shift;
 	char lcd_buff[LCD_LEN+1];
+	int i, j, k, l, x, y;
 
 	delay = 1000;
 	tim = delay;
@@ -88,8 +89,18 @@ void main(void)
 
 	GLCD_Initialize();
 	GLCD_ClearScreen();
-	GLCD_GoTo(10,10);
-	GLCD_Circle(64, 32, 10);
+	memset(bmp, 0, 128 * 64 / 8);
+	for (i = 0; i < 64 / 8; i++) {
+		for (j = 0; j < 128 / 8; j++) {
+			if (i % 2 == 0 && j % 2 == 0
+				|| i % 2 == 1 && j % 2 == 1) {
+				for (k = 0; k < 8; k++) {
+					for (l = 0; l < 8; l++) {
+						x = 8 * j + k;
+						y = 8 * i + l;
+						set_pixel_buf(bmp, x, y);
+	}}}}}
+	GLCD_Bitmap(bmp, 0, 0, 128, 64);
 
 	usbInit();
 	usbDeviceDisconnect();
