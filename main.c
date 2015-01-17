@@ -17,8 +17,8 @@
 uint32_t tim;
 char msg[MSG_LEN+1] = "quick brown fox jumps over a lazy dog";
 
-uint32_t delay;
-uint8_t update;
+volatile uint32_t delay;
+volatile uint8_t update;
 
 unsigned char bmp[128 * 64 / 8];
 
