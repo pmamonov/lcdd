@@ -75,6 +75,7 @@ struct usb_skel {
 	struct fb_info *fb;
 	struct workqueue_struct *workqueue;
 	char update;
+	struct mutex		fb_mutex;
 };
 #define to_skel_dev(d) container_of(d, struct usb_skel, kref)
 
@@ -87,6 +88,8 @@ static void ks0108usbfb_update(struct work_struct *wrk)
 	int pipe = usb_sndctrlpipe(dev->udev, 0);
 	int byte, bit, x, y;
 	unsigned char b;
+
+	mutex_lock(&dev->fb_mutex);
 
 	for (byte = 0; byte < 128 * 64 / 8; byte++) {
 		b = 0;
@@ -105,6 +108,7 @@ static void ks0108usbfb_update(struct work_struct *wrk)
 			sizeof(dev->ks0108bmp), 1000);
 	if (dev->update)
 		queue_delayed_work(dev->workqueue, wrk, HZ / 10);
+	mutex_unlock(&dev->fb_mutex);
 }
 
 static void skel_delete(struct kref *kref)
@@ -115,13 +119,15 @@ static void skel_delete(struct kref *kref)
 	usb_put_dev(dev->udev);
 	kfree(dev->bulk_in_buffer);
 	if (dev->fb) {
+		mutex_lock(&dev->fb_mutex);
 		unregister_framebuffer(dev->fb);
 		framebuffer_release(dev->fb);
 		dev->update = 0;
+		cancel_delayed_work(&dev->wrk);
 		flush_workqueue(dev->workqueue);
 		destroy_workqueue(dev->workqueue);
+		mutex_unlock(&dev->fb_mutex);
 	}
-
 	kfree(dev);
 }
 
@@ -687,6 +693,7 @@ static int skel_probe(struct usb_interface *interface,
 	dev->workqueue = create_singlethread_workqueue("ks0108usbfb");
 	INIT_DELAYED_WORK((struct delayed_work *)dev, ks0108usbfb_update);
 	dev->update = 1;
+	mutex_init(&dev->fb_mutex);
 	ks0108usbfb_update(&dev->wrk);
 
 	return 0;
