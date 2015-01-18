@@ -684,9 +684,11 @@ static int skel_probe(struct usb_interface *interface,
 		info->fix.id);
 
 	/* display checker pattern */
-	for (i = 0; i < 128 * 64 / 8; i += 2) {
-		dev->ks0108bmp[i] = 0xaa;
-		dev->ks0108bmp[i+1] = 0x55;
+	for (i = 0; i < 128 * 64 / 8; i++) {
+		if (i / (128 / 8) % 2)
+			dev->vbuff[i] = 0xaa;
+		else
+			dev->vbuff[i] = 0x55;
 	}
 
 	/* start updating screen */
